@@ -1,9 +1,11 @@
-let name = "小江";
+let name = "江致緯";
 
-console.log(Hello Node from ${name});
+console.log(`Hello Node from ${name}`);
 
-console.log[("start");
-SetTimeout(function () {
-    console.log("Timeout");
+console.log('start');
+
+setTimeout(function () {
+    console.log('Timeout');
 }, 1000);
-console.log("end");
+
+console.log('end');
