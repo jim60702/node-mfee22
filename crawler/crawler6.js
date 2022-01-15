@@ -1,8 +1,18 @@
 const axios = require("axios");
 const { readFile } = require("fs/promises");
 const moment = require("moment");
+const mysql = require("mysql2");
+require("dotenv").config();
 
 (async () => {
+  let connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+  });
+
   try {
     // 根據變數去抓取資料
     // 從 stock.txt 中讀出檔案代碼
@@ -29,6 +39,15 @@ const moment = require("moment");
     let stockDatas = stockData.split("\t");
     let stockName = stockDatas[1];
 
+    // 儲存股票代碼與名稱進資料庫
+    // Using prepared statements
+    // to protect from SQL Injection attacks
+    let saveNameResult = await connection.execute(
+      "INSERT INTO stocks (id, name) VALUES (?, ?)",
+      [stockNo, stockName]
+    );
+    console.log(saveNameResult);
+
     let queryDate = moment().format("YYYYMMDD"); // 自動用今天的日期
 
     let response = await axios.get(
@@ -48,4 +67,5 @@ const moment = require("moment");
   } catch (e) {
     console.error(e);
   }
+  connection.end();
 })();
