@@ -64,7 +64,7 @@ require("dotenv").config();
     );
 
     // 開始處理資料
-    let processData = response.data.data.map((d) => {
+    let pricePromises = response.data.data.map((d) => {
       // 處理民國年轉西元年
       let dateArr = d[0].split("/");
       dateArr[0] = Number(dateArr[0]) + 1911;
@@ -74,22 +74,14 @@ require("dotenv").config();
         return value.replace(/[,]+/g, "");
       });
       d.unshift(stockNo);
-      return d;
-    });
-    console.log(processData);
-
-    // 把整理好的資料存進資料庫
-    // connection.execute -> 處理 bulk insert 的 prepare statement 會有點小問題
-    // --> 回傳的是 promise 可以被 await
-    // connection.query
-    // 回傳的不是 promise，不能被 await
-    let savePriceResult = await connection
-      .promise()
-      .query(
-        "INSERT IGNORE INTO stock_prices (stock_id, date, volume, amount, open_price, high_price, low_price, close_price, delta_price, transactions) VALUES ?",
-        [processData]
+      // 把整理好的資料存進資料庫
+      return connection.execute(
+        "INSERT IGNORE INTO stock_prices (stock_id, date, volume, amount, open_price, high_price, low_price, close_price, delta_price, transactions) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        d
       );
-    console.log(savePriceResult);
+    });
+    let savePricesResult = await Promise.all(pricePromises);
+    console.log(savePricesResult);
   } catch (e) {
     console.error(e);
   }
